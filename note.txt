@@ -1,0 +1,22 @@
+main方法必须声明为public
+
+System.out.println()
+System.out对象调用了println方法
+
+整型：类型       存储需求
+      int          4字节
+      short	   2字节
+      long	   8字节
+      byte	   1字节       -128~127
+浮点型：
+      float        4字节       6~7位有效数字
+      double	   8字节       15位有效数字
+double表示这种类型数值精度为float的两倍。没有后缀f的浮点型，默认为double
+Double.isNaN(x)判断x是否为数字
+整数被0除会抛出异常，浮点数被0除会得到无穷大或NaN
+
+强制类型转换double转int： double x = 9.997;
+			  int nx = (int) x; //9
+			  int nx2 = (int) Math.round(x); //10 round返回long型
+
+			  77行
