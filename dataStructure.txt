@@ -1,0 +1,18 @@
+java.util包三个接口：List（列表）、Set（集合中元素唯一）、Map（key-value，key唯一）
+Collection: 
+       	   List:LinkedList、Vector、ArrayList
+	   Set:TreeSet、HashSet
+Map:
+    TreeMap
+    HashMap
+
+Collections操作集合的工具类，它提供了许多方便的方法，如求两个集合的差集、并集、拷贝、排序等等。
+由于大部分的集合接口实现类都是不同步的，可以使用Collections.synchronized*方法创建同步的集合类对象。
+如创建一个同步的List：
+List synList = Collections.synchronizedList(new ArrayList());
+
+ArrayList是非同步的，Vector是同步的，都是使用数组实现；
+LinkedList使用链表实现，删除效率高，遍历效率低。
+
+HashMap非同步的，线程不安全，可以接受key-value为null
+HashTable同步的，线程安全，key不为null
