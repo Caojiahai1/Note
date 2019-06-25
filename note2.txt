@@ -1,9 +1,0 @@
-GregorianCalendar calendar = new GregorianCalendar(year,month,day);
-Date time = calendar.getTime();
-calendar.setTime(time);  GregorianCalendar和Date类之间转换
-
-
-方法参数传递的形式有两种：值传递和拷贝引用对象
-
-
-spring IOC，把创建对象的控制权交给spring容器
