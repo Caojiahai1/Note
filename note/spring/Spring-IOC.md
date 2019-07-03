@@ -1,6 +1,6 @@
 [TOC]
 
-##  IOC（控制反转）
+## IOC（控制反转）
 
 是面向对象编程中的一种设计原则，可以用来减低计算机代码之间的耦合度。DI（依赖注入）是IOC的一种实现
 
@@ -41,7 +41,7 @@ javaconfig使用@ComponentScan("test")注解开启扫描
 使用如下代码启动spring获取全局环境context
 
 ```java
-AnnotationConfigApplicationContext context = new 				     AnnotationConfigApplicationContext(SpringConfig.class);
+AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
 ```
 
 ## 自动装配
@@ -60,13 +60,7 @@ AnnotationConfigApplicationContext context = new 				     AnnotationConfigApplic
 
   使用此注解默认是根据by type来匹配，如果有多个Bean的类型符合当前需要装配的属性，则会再根据beanName来匹配，如果有则取同名类的bean注入进来，否则报错。
 
-  如下图TestDAOImpl和TestDAOImpl1都符合type，通过testDAO去找不能找到，则会报错
-
-  ![1561528957857](C:\Users\18652\AppData\Roaming\Typora\typora-user-images\1561528957857.png)
-
-  如下图则会通过testDAOImpl找到TestDAOImpl
-
-  ![1561529160794](C:\Users\18652\AppData\Roaming\Typora\typora-user-images\1561529160794.png)
+  @Qualifier注解，限定符指定具体用哪个beanName
 
   @Primary注解，如果在bean上使用此注解，则当注入属性时找到多个bean时，取使用此注解的bean注入
 
@@ -86,7 +80,7 @@ singleton、prototype
 
 javaconfig上加上下面注解
 
-```
+```java
 @ComponentScan(value = "test", nameGenerator = MyBeanNameGenerator.class)
 ```
 
