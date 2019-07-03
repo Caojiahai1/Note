@@ -113,3 +113,35 @@
 
 5. target  指向接口和子类
 
+   ```
+   /**
+   
+   - 此处需要注意的是，如果配置设置proxyTargetClass=false，或默认为false，则是用JDK代理，否则使用的是CGLIB代理
+   - JDK代理的实现方式是基于接口实现，代理类继承Proxy，实现接口。
+   - 而CGLIB继承被代理的类来实现。
+   - 所以使用target会保证目标不变，关联对象不会受到这个设置的影响。
+   - 但是使用this对象时，会根据该选项的设置，判断是否能找到对象。
+     */
+     @Pointcut("target(com.chenss.dao.IndexDaoImpl)")//目标对象，也就是被代理的对象。限制目标对象为com.chenss.dao.IndexDaoImpl类
+     @Pointcut("this(com.chenss.dao.IndexDaoImpl)")//当前对象，也就是代理对象，代理对象时通过代理目标对象的方式获取新的对象，与原值并非一个
+     @Pointcut("@target(com.chenss.anno.Chenss)")//具有@Chenss的目标对象中的任意方法
+     @Pointcut("@within(com.chenss.anno.Chenss)")//等同于@targ
+   ```
+
+6. @annotation 
+
+   ```
+   作用方法级别
+   上述所有表达式都有@ 比如@Target(里面是一个注解类xx,表示所有加了xx注解的类,和包名无关)
+   注意:上述所有的表达式可以混合使用,|| && !
+   @Pointcut("@annotation(com.chenss.anno.Chenss)")//匹配带有com.chenss.anno.Chenss注解
+   ```
+
+7. bean
+
+   ```
+   @Pointcut("bean(dao1)")//名称为dao1的bean上的任意方法
+   @Pointcut("bean(dao*)")
+   ```
+
+   
