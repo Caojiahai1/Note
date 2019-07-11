@@ -20,7 +20,8 @@ set方法注入，构造方法注入
 
 ```xml
 <bean id="dao" class="test.dao.TestDAOImpl"></bean>
-<bean id="testService" class="test.service.TestService">     		<property name="testDAO" ref="dao"></property>
+<bean id="testService" class="test.service.TestService">
+    <property name="testDAO" ref="dao"></property>
 </bean>
 ```
 
