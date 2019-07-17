@@ -17,4 +17,14 @@ public class UserDaoImpl implements UserDao {
     public void doSomething(String d) {
         System.out.println("do:" + d);
     }
+
+    @Override
+    public void sayAnddo(String say, String d) {
+        System.out.println("say:" + say + " " + "do:" + d);
+    }
+
+    @Override
+    public void test() {
+        System.out.println("test");
+    }
 }
