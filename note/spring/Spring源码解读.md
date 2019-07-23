@@ -80,51 +80,51 @@ public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry, Environmen
 这个方法主要是将传入的配置类信息读取出来，放入到beanFactory中
 
 ```java
-	<T> void doRegisterBean(Class<T> annotatedClass, @Nullable Supplier<T> instanceSupplier, @Nullable String name,
+<T> void doRegisterBean(Class<T> annotatedClass, @Nullable Supplier<T> instanceSupplier, @Nullable String name,
 			@Nullable Class<? extends Annotation>[] qualifiers, BeanDefinitionCustomizer... definitionCustomizers) {
 
-        // 创建BD
-		AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(annotatedClass);
-        // 这边判断如果没有注解元数据或者加了@Conditional注解，则直接返回
-		if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
-			return;
-		}
+    // 创建BD
+    AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(annotatedClass);
+    // 这边判断如果没有注解元数据或者加了@Conditional注解，则直接返回
+    if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
+        return;
+    }
 
-        // 这边传进来为null
-		abd.setInstanceSupplier(instanceSupplier);
-		ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
-        // 设置scope
-		abd.setScope(scopeMetadata.getScopeName());
-        // 使用Spring默认的beanName生成器生成beanName
-		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
+    // 这边传进来为null
+    abd.setInstanceSupplier(instanceSupplier);
+    ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
+    // 设置scope
+    abd.setScope(scopeMetadata.getScopeName());
+    // 使用Spring默认的beanName生成器生成beanName
+    String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
 
-        // 这个方法内部主要是将注解元数据属性（Lazy、Primary、DependsOn、Role、Description）赋值到abd上
-		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
-        // 这边传进来是null
-		if (qualifiers != null) {
-			for (Class<? extends Annotation> qualifier : qualifiers) {
-				if (Primary.class == qualifier) {
-					abd.setPrimary(true);
-				}
-				else if (Lazy.class == qualifier) {
-					abd.setLazyInit(true);
-				}
-				else {
-					abd.addQualifier(new AutowireCandidateQualifier(qualifier));
-				}
-			}
-		}
-        // 这边传进来是null
-		for (BeanDefinitionCustomizer customizer : definitionCustomizers) {
-			customizer.customize(abd);
-		}
+    // 这个方法内部主要是将注解元数据属性（Lazy、Primary、DependsOn、Role、Description）赋值到abd上
+    AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
+    // 这边传进来是null
+    if (qualifiers != null) {
+        for (Class<? extends Annotation> qualifier : qualifiers) {
+            if (Primary.class == qualifier) {
+                abd.setPrimary(true);
+            }
+            else if (Lazy.class == qualifier) {
+                abd.setLazyInit(true);
+            }
+            else {
+                abd.addQualifier(new AutowireCandidateQualifier(qualifier));
+            }
+        }
+    }
+    // 这边传进来是null
+    for (BeanDefinitionCustomizer customizer : definitionCustomizers) {
+        customizer.customize(abd);
+    }
 
-        // bd和beanName封装成一个bdHolder，主要是为了方便传参
-		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
-		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
-        // 将bd注册到beanFactory中（put进bdMap中）
-		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
-	}
+    // bd和beanName封装成一个bdHolder，主要是为了方便传参
+    BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
+    definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+    // 将bd注册到beanFactory中（put进bdMap中）
+    BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
+}
 ```
 
 
@@ -132,76 +132,76 @@ public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry, Environmen
 ### refresh
 
 ```java
-	public void refresh() throws BeansException, IllegalStateException {
-        synchronized (this.startupShutdownMonitor) {
-            // Prepare this context for refreshing.
-            // 准备工作包括设置启动时间，是否激活标识位，初始化属性源(property source)配置
-            prepareRefresh();
+public void refresh() throws BeansException, IllegalStateException {
+    synchronized (this.startupShutdownMonitor) {
+        // Prepare this context for refreshing.
+        // 准备工作包括设置启动时间，是否激活标识位，初始化属性源(property source)配置
+        prepareRefresh();
 
-            // Tell the subclass to refresh the internal bean factory.
-            // 获取beanFactory,需要对beanFactory进行配置
-            ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+        // Tell the subclass to refresh the internal bean factory.
+        // 获取beanFactory,需要对beanFactory进行配置
+        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
-            // Prepare the bean factory for use in this context.
-            // 准备beanFactory，具体看下面进入方法体代码
-            prepareBeanFactory(beanFactory);
+        // Prepare the bean factory for use in this context.
+        // 准备beanFactory，具体看下面进入方法体代码
+        prepareBeanFactory(beanFactory);
 
-            try {
-                // Allows post-processing of the bean factory in context subclasses.
-                // 暂时是个空壳方法，可能Spring后续版本会进行实现
-                postProcessBeanFactory(beanFactory);
+        try {
+            // Allows post-processing of the bean factory in context subclasses.
+            // 暂时是个空壳方法，可能Spring后续版本会进行实现
+            postProcessBeanFactory(beanFactory);
 
-                // Invoke factory processors registered as beans in the context.
-                // 这个方法内部会执行Spring自己定义的BeanFactoryPostProcessors
-                // 和用户手动添加的BeanFactoryPostProcessors
-                // 具体进入方法体看
-                invokeBeanFactoryPostProcessors(beanFactory);
+            // Invoke factory processors registered as beans in the context.
+            // 这个方法内部会执行Spring自己定义的BeanFactoryPostProcessors
+            // 和用户手动添加的BeanFactoryPostProcessors
+            // 具体进入方法体看
+            invokeBeanFactoryPostProcessors(beanFactory);
 
-                // Register bean processors that intercept bean creation.
-                registerBeanPostProcessors(beanFactory);
+            // Register bean processors that intercept bean creation.
+            registerBeanPostProcessors(beanFactory);
 
-                // Initialize message source for this context.
-                initMessageSource();
+            // Initialize message source for this context.
+            initMessageSource();
 
-                // Initialize event multicaster for this context.
-                initApplicationEventMulticaster();
+            // Initialize event multicaster for this context.
+            initApplicationEventMulticaster();
 
-                // Initialize other special beans in specific context subclasses.
-                onRefresh();
+            // Initialize other special beans in specific context subclasses.
+            onRefresh();
 
-                // Check for listener beans and register them.
-                registerListeners();
+            // Check for listener beans and register them.
+            registerListeners();
 
-                // Instantiate all remaining (non-lazy-init) singletons.
-                finishBeanFactoryInitialization(beanFactory);
+            // Instantiate all remaining (non-lazy-init) singletons.
+            finishBeanFactoryInitialization(beanFactory);
 
-                // Last step: publish corresponding event.
-                finishRefresh();
-            }
-
-            catch (BeansException ex) {
-                if (logger.isWarnEnabled()) {
-                    logger.warn("Exception encountered during context initialization - " +
-                                "cancelling refresh attempt: " + ex);
-                }
-
-                // Destroy already created singletons to avoid dangling resources.
-                destroyBeans();
-
-                // Reset 'active' flag.
-                cancelRefresh(ex);
-
-                // Propagate exception to caller.
-                throw ex;
-            }
-
-            finally {
-                // Reset common introspection caches in Spring's core, since we
-                // might not ever need metadata for singleton beans anymore...
-                resetCommonCaches();
-            }
+            // Last step: publish corresponding event.
+            finishRefresh();
         }
-	}
+
+        catch (BeansException ex) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("Exception encountered during context initialization - " +
+                            "cancelling refresh attempt: " + ex);
+            }
+
+            // Destroy already created singletons to avoid dangling resources.
+            destroyBeans();
+
+            // Reset 'active' flag.
+            cancelRefresh(ex);
+
+            // Propagate exception to caller.
+            throw ex;
+        }
+
+        finally {
+            // Reset common introspection caches in Spring's core, since we
+            // might not ever need metadata for singleton beans anymore...
+            resetCommonCaches();
+        }
+    }
+}
 ```
 
 #### prepareBeanFactory
@@ -429,6 +429,8 @@ Spring内部提供了ConfigurationClassPostProcessor这个类，这个类是在�
 ConfigurationClassPostProcessor实现了BeanDefinitionRegistryPostProcessor接口，分别实现了postProcessBeanDefinitionRegistry和postProcessBeanFactory这两个方法，接下来这两个方法具体做了什么。
 
 #### postProcessBeanDefinitionRegistry
+
+这个方法完成了对所有加了注解类的扫描
 
 这个方法主要进入下面这个方法看
 
@@ -852,4 +854,214 @@ private void loadBeanDefinitionsForConfigurationClass(
 
 
 #### postProcessBeanFactory
+
+这个方法主要是将加了@Configuration注解的类进行Cglib代理，对于加了@Bean注解的方法进行代理，如果bean作用域是singleton的，通过代理这些方法只有在第一次调用父类的创建bean实例方法，之后调用都会根据beanName直接从beanFactory中取出bean，以保证bean是单例的
+
+```java
+public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+    int factoryId = System.identityHashCode(beanFactory);
+    if (this.factoriesPostProcessed.contains(factoryId)) {
+        throw new IllegalStateException(
+            "postProcessBeanFactory already called on this post-processor against " + beanFactory);
+    }
+    this.factoriesPostProcessed.add(factoryId);
+    // 这边判断如果还没执行processConfigBeanDefinitions这一步，则在这边执行一下
+    if (!this.registriesPostProcessed.contains(factoryId)) {
+        // BeanDefinitionRegistryPostProcessor hook apparently not supported...
+        // Simply call processConfigurationClasses lazily at this point then.
+        processConfigBeanDefinitions((BeanDefinitionRegistry) beanFactory);
+    }
+
+    // 这个方法内部会轮询所有bd，判断BD是否被标识为Full（这个标识在processConfigBeanDefinitions方法中进行标识，加了@Configuration注解的类会标识为Full），将所有标识Full的类进行Cglib代理
+    // 具体看enhanceConfigurationClasses方法代码注释
+    enhanceConfigurationClasses(beanFactory);
+    beanFactory.addBeanPostProcessor(new ImportAwareBeanPostProcessor(beanFactory));
+}
+```
+
+##### enhanceConfigurationClasses
+
+```java
+public void enhanceConfigurationClasses(ConfigurableListableBeanFactory beanFactory) {
+    // 定义一个map用来存放加了@Configuration注解的bd
+    Map<String, AbstractBeanDefinition> configBeanDefs = new LinkedHashMap<>();
+    // 循环beanFactory中所有bd，如果是Full标识即@Configuration注解的放入map
+    for (String beanName : beanFactory.getBeanDefinitionNames()) {
+        BeanDefinition beanDef = beanFactory.getBeanDefinition(beanName);
+        if (ConfigurationClassUtils.isFullConfigurationClass(beanDef)) {
+            if (!(beanDef instanceof AbstractBeanDefinition)) {
+                throw new BeanDefinitionStoreException("Cannot enhance @Configuration bean definition '" +
+                                                       beanName + "' since it is not stored in an AbstractBeanDefinition subclass");
+            }
+            else if (logger.isWarnEnabled() && beanFactory.containsSingleton(beanName)) {
+                logger.warn("Cannot enhance @Configuration bean definition '" + beanName +
+                            "' since its singleton instance has been created too early. The typical cause " +
+                            "is a non-static @Bean method with a BeanDefinitionRegistryPostProcessor " +
+                            "return type: Consider declaring such methods as 'static'.");
+            }
+            configBeanDefs.put(beanName, (AbstractBeanDefinition) beanDef);
+        }
+    }
+    // 没有直接返回
+    if (configBeanDefs.isEmpty()) {
+        // nothing to enhance -> return immediately
+        return;
+    }
+
+    // 工具类，用来完成Cglib代理
+    ConfigurationClassEnhancer enhancer = new ConfigurationClassEnhancer();
+    for (Map.Entry<String, AbstractBeanDefinition> entry : configBeanDefs.entrySet()) {
+        AbstractBeanDefinition beanDef = entry.getValue();
+        // If a @Configuration class gets proxied, always proxy the target class
+        beanDef.setAttribute(AutoProxyUtils.PRESERVE_TARGET_CLASS_ATTRIBUTE, Boolean.TRUE);
+        try {
+            // Set enhanced subclass of the user-specified bean class
+            // 先获得原来的配置类，作为父类
+            Class<?> configClass = beanDef.resolveBeanClass(this.beanClassLoader);
+            if (configClass != null) {
+                // 执行代理，返回一个Cglib代理的Class
+                // 这个方法实际上就是new了一个Enhancer，具体看下面代码
+                Class<?> enhancedClass = enhancer.enhance(configClass, this.beanClassLoader);
+                if (configClass != enhancedClass) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(String.format("Replacing bean definition '%s' existing class '%s' with " +
+                                                   "enhanced class '%s'", entry.getKey(), configClass.getName(), enhancedClass.getName()));
+                    }
+                    // 将代理Class作为原来bd的BeanClass
+                    beanDef.setBeanClass(enhancedClass);
+                }
+            }
+        }
+        catch (Throwable ex) {
+            throw new IllegalStateException("Cannot load configuration class: " + beanDef.getBeanClassName(), ex);
+        }
+    }
+}
+```
+
+创建一个新的Cglib代理实对象
+
+```java
+private Enhancer newEnhancer(Class<?> configSuperClass, @Nullable ClassLoader classLoader) {
+    Enhancer enhancer = new Enhancer();
+    // 将目标对象设为父类继承他
+    enhancer.setSuperclass(configSuperClass);
+    // 实现EnhancedConfiguration接口，这个接口继承了BeanFactoryAware接口，实际上就是提供了一个setBeanFactory方法，因为对配置类代理过后，加了@Bean注解的方法只有在第一次实例化对象的时候调父类的方法，之后再去调这个方法的时候代理对象直接会根据beanName从beanFactory中去拿，所以需要一个beanFactory
+    enhancer.setInterfaces(new Class<?>[] {EnhancedConfiguration.class});
+    enhancer.setUseFactory(false);
+    enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
+    // 这里面传一个生成类的策略，这边主要声明了一个BeanFactory变量用$$beanFactory表示
+    enhancer.setStrategy(new BeanFactoryAwareGeneratorStrategy(classLoader));
+    // 这边是传入代理的Callback，用来对父类方法进行拦截代理
+    // Spring这边主要用了BeanMethodInterceptor、BeanFactoryAwareMethodInterceptor这两个Callback
+    // 这边传入的Callback都会实现MethodInterceptor接口的intercept方法，解析来看这两个Callback的具体作用分析
+    enhancer.setCallbackFilter(CALLBACK_FILTER);
+    enhancer.setCallbackTypes(CALLBACK_FILTER.getCallbackTypes());
+    return enhancer;
+}
+```
+
+###### BeanMethodInterceptor
+
+这个类实现了MethodInterceptor, ConditionalCallback这两个接口，其中MethodInterceptor接口实现了intercept方法对目标父类的方法进行拦截代理，ConditionalCallback实现了其isMatch方法用来匹配只有加了@Bean注解的方法；接下来主要分析intercept方法。
+
+```java
+public Object intercept(Object enhancedConfigInstance, Method beanMethod, Object[] beanMethodArgs,
+					MethodProxy cglibMethodProxy) throws Throwable {
+
+    // 获取beanFactory
+    ConfigurableBeanFactory beanFactory = getBeanFactory(enhancedConfigInstance);
+    // 根据beanMethod获取beanName
+    String beanName = BeanAnnotationHelper.determineBeanNameFor(beanMethod);
+
+    // Determine whether this bean is a scoped-proxy
+    Scope scope = AnnotatedElementUtils.findMergedAnnotation(beanMethod, Scope.class);
+    if (scope != null && scope.proxyMode() != ScopedProxyMode.NO) {
+        String scopedBeanName = ScopedProxyCreator.getTargetBeanName(beanName);
+        if (beanFactory.isCurrentlyInCreation(scopedBeanName)) {
+            beanName = scopedBeanName;
+        }
+    }
+
+    // To handle the case of an inter-bean method reference, we must explicitly check the
+    // container for already cached instances.
+
+    // First, check to see if the requested bean is a FactoryBean. If so, create a subclass
+    // proxy that intercepts calls to getObject() and returns any cached bean instance.
+    // This ensures that the semantics of calling a FactoryBean from within @Bean methods
+    // is the same as that of referring to a FactoryBean within XML. See SPR-6602.
+    // 这边是有关factoryBean的处理，先放一下
+    if (factoryContainsBean(beanFactory, BeanFactory.FACTORY_BEAN_PREFIX + beanName) &&
+        factoryContainsBean(beanFactory, beanName)) {
+        Object factoryBean = beanFactory.getBean(BeanFactory.FACTORY_BEAN_PREFIX + beanName);
+        if (factoryBean instanceof ScopedProxyFactoryBean) {
+            // Scoped proxy factory beans are a special case and should not be further proxied
+        }
+        else {
+            // It is a candidate FactoryBean - go ahead with enhancement
+            return enhanceFactoryBean(factoryBean, beanMethod.getReturnType(), beanFactory, beanName);
+        }
+    }
+
+    // 如果第一次调用@bean方法，则会进入这个判断，调用父类原始方法创建bean实例
+    if (isCurrentlyInvokedFactoryMethod(beanMethod)) {
+        // The factory is calling the bean method in order to instantiate and register the bean
+        // (i.e. via a getBean() call) -> invoke the super implementation of the method to actually
+        // create the bean instance.
+        if (logger.isWarnEnabled() &&
+            BeanFactoryPostProcessor.class.isAssignableFrom(beanMethod.getReturnType())) {
+            logger.warn(String.format("@Bean method %s.%s is non-static and returns an object " +
+                                      "assignable to Spring's BeanFactoryPostProcessor interface. This will " +
+                                      "result in a failure to process annotations such as @Autowired, " +
+                                      "@Resource and @PostConstruct within the method's declaring " +
+                                      "@Configuration class. Add the 'static' modifier to this method to avoid " +
+                                      "these container lifecycle issues; see @Bean javadoc for complete details.",
+                                      beanMethod.getDeclaringClass().getSimpleName(), beanMethod.getName()));
+        }
+        return cglibMethodProxy.invokeSuper(enhancedConfigInstance, beanMethodArgs);
+    }
+
+    // 如果不是第一次调用，则会进入这个方法，根据beanName从factoryBean中取出bean
+    return resolveBeanReference(beanMethod, beanMethodArgs, beanFactory, beanName);
+}
+```
+
+
+
+###### BeanFactoryAwareMethodInterceptor
+
+BeanFactoryAwareMethodInterceptor接口和BeanMethodInterceptor同样实现了MethodInterceptor, ConditionalCallback这两个接口，这个类主要是拦截setBeanFatory方法，给$$beanFactory属性设置
+
+```java
+private static class BeanFactoryAwareMethodInterceptor implements MethodInterceptor, ConditionalCallback {
+
+    // 这个方法实际上就是对setBeanFactory的实现
+    @Override
+    @Nullable
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        // 取出$$beanFactory属性
+        Field field = ReflectionUtils.findField(obj.getClass(), BEAN_FACTORY_FIELD);
+        Assert.state(field != null, "Unable to find generated BeanFactory field");
+        // 给属性赋值
+        field.set(obj, args[0]);
+
+        // Does the actual (non-CGLIB) superclass implement BeanFactoryAware?
+        // If so, call its setBeanFactory() method. If not, just exit.
+        // 如果cglib代理类的父类本身对BeanFactoryAware完成了实现，则调用其父类的实现方法
+        if (BeanFactoryAware.class.isAssignableFrom(ClassUtils.getUserClass(obj.getClass().getSuperclass()))) {
+            return proxy.invokeSuper(obj, args);
+        }
+        return null;
+    }
+
+    // 这个方法用来判断是否是setBeanFactory方法
+    @Override
+    public boolean isMatch(Method candidateMethod) {
+        return (candidateMethod.getName().equals("setBeanFactory") &&
+                candidateMethod.getParameterCount() == 1 &&
+                BeanFactory.class == candidateMethod.getParameterTypes()[0] &&
+                BeanFactoryAware.class.isAssignableFrom(candidateMethod.getDeclaringClass()));
+    }
+}
+```
 
