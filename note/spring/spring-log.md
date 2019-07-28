@@ -96,8 +96,8 @@ jcl是Apache提供的一个日志接口，避免项目中日志方案的耦合�
 ```xml
 <dependency>
     <groupId>commons-logging</groupId>
-    <artifactId>commons-logging-api</artifactId>
-    <version>1.1</version>
+    <artifactId>commons-logging</artifactId>
+    <version>1.1.3</version>
 </dependency>
 <dependency>
     <groupId>log4j</groupId>
