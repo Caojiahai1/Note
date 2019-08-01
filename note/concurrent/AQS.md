@@ -124,6 +124,56 @@ static final class FairSync extends Sync {
             selfInterrupt();
     }
     
+    /**
+         * Fair version of tryAcquire.  Don't grant access unless
+         * recursive call or no waiters or is first.
+         */
+    protected final boolean tryAcquire(int acquires) {
+        // 获取当前线程
+        final Thread current = Thread.currentThread();
+        // 获取state状态
+        int c = getState();
+        // 如果c==0说明当前没有线程占有锁
+        if (c == 0) {
+            // 首先调用hasQueuedPredecessors判断当前线程前面是否还有其它线程在排队等待获取锁
+            // 有则直接返回判断不往下执行，因为前面有线程在阻塞队列中，需要排队
+            // 如果返回false，说明接下来就是当前线程阻塞等待获取锁，那么执行进行CAS先尝试一次获取锁
+            // 成功则将当前线程设为AQS当前占有锁的线程，不成功则返回false加入队列
+            if (!hasQueuedPredecessors() &&
+                compareAndSetState(0, acquires)) {
+                setExclusiveOwnerThread(current);
+                return true;
+            }
+        }
+        // 到这一步说明c！=0，当前有线程占有锁了，如果是当前线程占有的，则进行锁重入c的值＋1
+        else if (current == getExclusiveOwnerThread()) {
+            int nextc = c + acquires;
+            if (nextc < 0)
+                throw new Error("Maximum lock count exceeded");
+            setState(nextc);
+            return true;
+        }
+        // 如果有线程已经占有锁，并且不是当前线程，则获取锁失败，返回false
+        return false;
+    }
+    
+    // AQS公共方法
+    // 这个方法实际上是判断在当前线程片面是否还有其它线程在阻塞等待获取锁
+    public final boolean hasQueuedPredecessors() {
+        // The correctness of this depends on head being initialized
+        // before tail and on head.next being accurate if the current
+        // thread is first in queue.
+        Node t = tail; // Read fields in reverse initialization order
+        Node h = head;
+        Node s;
+        // 如果tail == head说明当前没有阻塞队列，所以直接返回false
+        // 如果tail ！= head，则往下进行判断s是头节点的下一个节点，实际上指的是阻塞队列的第一个
+        // 如果s==null说明tail节点next不再指向任何节点，那么只有一种情况tail节点释放了锁，当前的tail节点已经换成另外一个节点了，所以直接返回true不再去尝试获取锁
+        // s！=null则当前tail还没释放锁，那么判断s节点的线程是否就是当前线程，如果是当前线程，那么返回false直接去尝试获取锁
+        return h != t &&
+            ((s = h.next) == null || s.thread != Thread.currentThread());
+    }
+    
     // AQS公共方法
     private Node addWaiter(Node mode) {
         // 将当前线程创建一个Node
@@ -257,55 +307,6 @@ static final class FairSync extends Sync {
         return false;
     }
 
-    /**
-         * Fair version of tryAcquire.  Don't grant access unless
-         * recursive call or no waiters or is first.
-         */
-    protected final boolean tryAcquire(int acquires) {
-        // 获取当前线程
-        final Thread current = Thread.currentThread();
-        // 获取state状态
-        int c = getState();
-        // 如果c==0说明当前没有线程占有锁
-        if (c == 0) {
-            // 首先调用hasQueuedPredecessors判断当前线程前面是否还有其它线程在排队等待获取锁
-            // 有则直接返回判断不往下执行，因为前面有线程在阻塞队列中，需要排队
-            // 如果返回false，说明接下来就是当前线程阻塞等待获取锁，那么执行进行CAS先尝试一次获取锁
-            // 成功则将当前线程设为AQS当前占有锁的线程，不成功则返回false加入队列
-            if (!hasQueuedPredecessors() &&
-                compareAndSetState(0, acquires)) {
-                setExclusiveOwnerThread(current);
-                return true;
-            }
-        }
-        // 到这一步说明c！=0，当前有线程占有锁了，如果是当前线程占有的，则进行锁重入c的值＋1
-        else if (current == getExclusiveOwnerThread()) {
-            int nextc = c + acquires;
-            if (nextc < 0)
-                throw new Error("Maximum lock count exceeded");
-            setState(nextc);
-            return true;
-        }
-        // 如果有线程已经占有锁，并且不是当前线程，则获取锁失败，返回false
-        return false;
-    }
-    
-    // AQS公共方法
-    // 这个方法实际上是判断在当前线程片面是否还有其它线程在阻塞等待获取锁
-    public final boolean hasQueuedPredecessors() {
-        // The correctness of this depends on head being initialized
-        // before tail and on head.next being accurate if the current
-        // thread is first in queue.
-        Node t = tail; // Read fields in reverse initialization order
-        Node h = head;
-        Node s;
-        // 如果tail == head说明当前没有阻塞队列，所以直接返回false
-        // 如果tail ！= head，则往下进行判断s是头节点的下一个节点，实际上指的是阻塞队列的第一个
-        // 如果s==null说明tail节点next不再指向任何节点，那么只有一种情况tail节点释放了锁，当前的tail节点已经换成另外一个节点了，所以直接返回true不再去尝试获取锁
-        // s！=null则当前tail还没释放锁，那么判断s节点的线程是否就是当前线程，如果是当前线程，那么返回false直接去尝试获取锁
-        return h != t &&
-            ((s = h.next) == null || s.thread != Thread.currentThread());
-    }
 }
 ```
 
