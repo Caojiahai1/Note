@@ -168,8 +168,9 @@ static final class FairSync extends Sync {
         Node s;
         // 如果tail == head说明当前没有阻塞队列，所以直接返回false
         // 如果tail ！= head，则往下进行判断s是头节点的下一个节点，实际上指的是阻塞队列的第一个
-        // 如果s==null说明tail节点next不再指向任何节点，那么只有一种情况tail节点释放了锁，当前的tail节点已经换成另外一个节点了，所以直接返回true不再去尝试获取锁
-        // s！=null则当前tail还没释放锁，那么判断s节点的线程是否就是当前线程，如果是当前线程，那么返回false直接去尝试获取锁
+        // 如果s==null说明head节点next不再指向任何节点，那么只有一种情况head节点释放了锁
+        // 当前的head节点已经换成另外一个节点了，所以直接返回true不再去尝试获取锁
+        // s！=null则当前head还没释放锁，那么判断s节点的线程是否就是当前线程，如果是当前线程，那么返回false直接去尝试获取锁
         return h != t &&
             ((s = h.next) == null || s.thread != Thread.currentThread());
     }
